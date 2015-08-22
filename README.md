@@ -12,7 +12,9 @@ python setup.py install
 from lendingclub import LendingClub
 lc = LendingClub(investor_id=999999999, token='<auth_token>')
 print lc.summary()
-{u'accountTotal': 5107.35, u'receivedLateFees': 0, u'receivedInterest': 111.74, u'infundingBalance': 225, u'outstandingPrincipal': 4831.93, u'investorId': 999999, u'receivedPrincipal': 518.07, u'accruedInterest': 24.79, u'availableCash': 50.42, u'totalPortfolios': 3, u'totalNotes': 170}
+{u'accountTotal': 5107.35, u'receivedLateFees': 0, u'receivedInterest': 111.74, u'infundingBalance': 225,
+u'outstandingPrincipal': 4831.93, u'investorId': 999999, u'receivedPrincipal': 518.07, u'accruedInterest': 24.79,
+u'availableCash': 50.42, u'totalPortfolios': 3, u'totalNotes': 170}
 
 ```
 > auth_token is an authentication token generated via the Lending Club web application.
