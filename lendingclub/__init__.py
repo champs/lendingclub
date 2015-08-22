@@ -12,6 +12,7 @@ __doc__ = """   Created-by: Peerakit Champ Somsuk
 class RequstError(Exception):
     pass
 
+
 class LendingClub:
 
     """ from lendingclub import LendingClub
@@ -48,7 +49,9 @@ class LendingClub:
                                 headers=headers,
                                 params=params)
         if response.status_code != 200:
-            raise RequstError(response.content)
+            msg = '{}: {}'.format(response.status_code,
+                                  response.content)
+            raise RequstError(msg)
         return response.json()
 
     def summary(self):
