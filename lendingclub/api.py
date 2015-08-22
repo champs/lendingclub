@@ -17,6 +17,8 @@ class API:
         self.investor_id = investor_id
         self.token = token
         self.version = version
+        # summary cache
+        self._summary = None
         # loans/notes cache for analytics
         self._notes = None
         self._loans = None
@@ -51,19 +53,21 @@ class API:
         return response.json()
 
     def summary(self):
-        return self.get('summary')
+        if not self._summary:
+            self._summary = self.get('summary')
+        return self._summary
 
     def availablecash(self):
         return self.get('availablecash')
 
     def notes(self):
-        notes = self.get('notes')
-        self._notes = notes['myNotes']
+        if not self._notes:
+            self._notes = self.get('notes')['myNotes']
         return self._notes
 
     def detailednotes(self):
-        detailed_notes = self.get('detailednotes')
-        self._detailednotes = detailed_notes['myNotes']
+        if not self._detailednotes:
+            self._detailednotes = self.get('detailednotes')['myNotes']
         return self._detailednotes
 
     def portfolios(self):
@@ -83,16 +87,22 @@ class API:
         return loans
 
     def get_notes(self):
+        """ Return Note Objects
+        """
         if not self._notes:
             self.notes()
         return [Note(n) for n in self._notes]
 
     def get_detailednotes(self):
+        """ Return List of DetailedNote Objects
+        """
         if not self._detailednotes:
             self.detailednotes()
         return [DetailedNote(n) for n in self._detailednotes]
 
     def get_loans(self):
+        """ Return List of Loan Objects
+        """
         if not self._loans:
             self.loanlisting()
         return [Loan(l) for l in self._loans]

@@ -2,7 +2,7 @@
 
 import json
 import datetime
-
+from utils import get_time_now, parse_time
 
 class AttrError(Exception):
     pass
@@ -13,14 +13,25 @@ class BaseObject(object):
     def __init__(self, dict_obj):
         self.__dict__ = dict_obj
 
-    def __getattr__(self, key):
+    def __getattr__(self, name):
         try:
-            return self.__dict__[key]
+            return self.__dict__[name]
         except:
-            raise AttrError('{} does not exists')
+            raise AttrError('{} does not exists'.format(name))
 
     def dumps(self):
     	print json.dumps(self.__dict__, indent=3)
+
+    def is_pass_filter(self, crit={}):
+        """ crit = [ {'grade__gt': 'D',
+                      ''}
+                    ]
+        """
+
+
+class Summary(BaseObject):
+    pass
+
 
 class Note(BaseObject):
 
@@ -48,74 +59,110 @@ class DetailedNote(BaseObject):
 
     """
     {
-            "loanId":11111,
-            "noteId":22222,
-            "orderId":33333,
-            "purpose":"Debt consolidation",
-            "interestRate":13.57,
-            "loanLength":36,
-            "loanStatus":"Late (31-120 days)",
-            "grade":"C3",
-            "currentPaymentStatus":"Not Received",
-            "canBeTraded":true,
-            "creditTrend":"DOWN",
-            "loanAmount":10800,
-            "noteAmount":25,
-            "paymentsReceived":5.88,
-            "accruedInterest":12.1,
-            "principalPending":20.94,
-            "interestPending":0,
-            "principalReceived":4.06,
-            "interestReceived":1.82,
-            "nextPaymentDate":"2014-05-15T00:00:00.000-07:00",
-            "issueDate":"2009-11-12T00:00:00.000-08:00",
-            "orderDate":"2009-11-05T00:00:00.000-08:00",
-            "loanStatusDate":"2013-05-20T00:00:00.000-07:00"
+       "grade": "C1", 
+       "loanId": 55555555, 
+       "interestRate": 12.29, 
+       "accruedInterest": 0.21, 
+       "creditTrend": "UP", 
+       "portfolioName": "xxxxxxxx", 
+       "loanStatus": "Current", 
+       "loanAmount": 10000, 
+       "canBeTraded": true, 
+       "loanStatusDate": "2015-04-24T00:00:00.000-07:00", 
+       "interestPending": 0, 
+       "lastPaymentDate": "2015-07-30T11:53:21.000-07:00", 
+       "principalReceived": 2.49, 
+       "nextPaymentDate": "2015-09-01T00:00:00.000-07:00", 
+       "orderId": 11111111111, 
+       "portfolioId": 11111111111, 
+       "currentPaymentStatus": "Completed", 
+       "purpose": "Debt consolidation", 
+       "paymentsReceived": 3.44, 
+       "noteAmount": 25, 
+       "noteId": 11111111111, 
+       "principalPending": 22.51, 
+       "issueDate": "2015-03-26T00:00:00.000-07:00", 
+       "interestReceived": 0.95, 
+       "loanLength": 36, 
+       "orderDate": "2015-03-20T00:00:00.000-07:00"
     }
     """
     def __str__(self):
     	return '<DetailedNote: {}>'.format(self.noteId)
 
+    def get_current_payment_number(self):
+        """ return number of current payment
+            calculate by:
+            = number of month of (now() - orderdate) / 30
+        """
+        issueDate = parse_time(self.issueDate)
+        lastPaymentDate = parse_time(self.lastPaymentDate)
+        if not lastPaymentDate:
+            return 0
+        payment_no = (lastPaymentDate - issueDate).days / 30
+        if lastPaymentDate and not payment_no:
+            return 1
+        else:
+            return payment_no
+
+
+    def estimate_next_payment_amount(self):
+        """ return estimate payment for this note
+            calculate by:
+            = paymentReceived / payment_no
+        """
+        payment_no = self.get_current_payment_number()
+
+        if self.loanStatus == "Fully Paid":
+            return 0
+        elif self.loanStatus not in ("Issue", "Current"):
+            return 0
+        elif not self.lastPaymentDate:
+            return self.noteAmount * (100 + self.interestRate) / 100 / self.loanLength
+        return round(self.paymentsReceived / payment_no, 2)
+
+
 
 class Loan(BaseObject):
 
     """
+    https://www.lendingclub.com/developers/listed-loans.action
     {
             "id":111111,
             "memberId":222222,
             "loanAmount":1750.0,
             "fundedAmount":25.0,
-            "term":36,
-            "intRate":10.99,
-            "expDefaultRate":3.5,
-            "serviceFeeRate":0.85,
+            "term":36,                      **
+            "intRate":10.99,                **
+            "expDefaultRate":3.5,           **
+            "serviceFeeRate":0.85,          **
             "installment":57.29,
-            "grade":"B",
-            "subGrade":"B3",
-            "empLength":0,
-            "homeOwnership":"OWN",
-            "annualInc":123432.0,
+            "grade":"B",                    **
+            "subGrade":"B3",                **
+            "empLength":0,                  **
+            "homeOwnership":"OWN",          **
+            "annualInc":123432.0,           **
             "isIncV":"Requested",
             "acceptD":"2014-08-25T10:56:29.000-07:00",
             "expD":"2014-09-08T10:57:13.000-07:00",
             "listD":"2014-08-25T10:50:20.000-07:00",
             "creditPullD":"2014-08-25T10:56:18.000-07:00",
             "reviewStatusD":"2014-09-03T14:41:53.957-07:00",
-            "reviewStatus":"NOT_APPROVED",
-            "desc":"Loan description",
+            "reviewStatus":"NOT_APPROVED",  
+            "desc":"Loan description",      **
             "purpose":"debt_consolidation",
-            "addrZip":"904xx",
-            "addrState":"CA",
-            "investorCount":"",
+            "addrZip":"904xx",              **
+            "addrState":"CA",               **
+            "investorCount":"",             **
             "ilsExpD":"2014-08-25T11:00:00.000-07:00",
             "initialListStatus":"F",
             "empTitle":"",
-            "accNowDelinq":"",
+            "accNowDelinq":"",              **
             "accOpenPast24Mths":23,
             "bcOpenToBuy":30000,
-            "percentBcGt75":23.0,
-            "bcUtil":23.0,
-            "dti":0.0,
+            "percentBcGt75":23.0,           **
+            "bcUtil":23.0,                  **
+            "dti":0.0,                      **
             "delinq2Yrs":1,
             "delinqAmnt":0.0,
             "earliestCrLine":"1984-09-15T00:00:00.000-07:00",

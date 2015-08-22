@@ -58,3 +58,6 @@ target/
 
 # virtualenv
 venv/
+
+# test
+lendingtest.py
