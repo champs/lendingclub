@@ -1,0 +1,9 @@
+1.0
+* initialize project
+* handle all get requests including
+	Summary
+	Available cash
+	Notes owned
+	Detailed notes owned
+	Portfolio owned
+	*Listed loans (all, or last avail list)
