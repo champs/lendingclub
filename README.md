@@ -8,10 +8,23 @@ pip install requests
 python setup.py install
 
 ## Usage:
+```
 from lendingclub import LendingClub
-LendingClub(investor_id=999999999, token='<auth_token>'
+lc = LendingClub(investor_id=999999999, token='<auth_token>')
+print lc.summary()
+{u'accountTotal': 5107.35, u'receivedLateFees': 0, u'receivedInterest': 111.74, u'infundingBalance': 225, u'outstandingPrincipal': 4831.93, u'investorId': 999999, u'receivedPrincipal': 518.07, u'accruedInterest': 24.79, u'availableCash': 50.42, u'totalPortfolios': 3, u'totalNotes': 170}
 
-auth_token is an authentication token generated via the Lending Club web application.
+```
+> auth_token is an authentication token generated via the Lending Club web application.
+
+## Available Commands
+1. summary()
+2. availablecash()
+3. notes()
+4. detailednotes()
+5. portfolios()
+6. loanlisting()
+
 
 ## Reference:
 https://www.lendingclub.com/developers/lc-api.action
