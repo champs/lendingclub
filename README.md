@@ -17,6 +17,7 @@ print lc.summary()
 ```
 > auth_token is an authentication token generated via the Lending Club web application.
 
+```
 ## Available Commands
 from lendingclub import api
 1. summary()
@@ -29,7 +30,7 @@ from lendingclub import api
 7. get_loans()
 8. get_notes()
 9. get_detailednotes()
-
+```
 
 ## Reference:
 https://www.lendingclub.com/developers/lc-api.action
