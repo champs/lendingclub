@@ -1,6 +1,6 @@
 
-from api import API
-from objects import Note, Loan
+from api import API, FolioFn
+from objects import Note, Loan, FolioLoan
 from analytic import NotesAnalytic, LoansAnalytic
 
 

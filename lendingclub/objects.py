@@ -4,6 +4,7 @@ import json
 import datetime
 from utils import get_time_now, parse_time
 
+
 class AttrError(Exception):
     pass
 
@@ -17,10 +18,15 @@ class BaseObject(object):
         try:
             return self.__dict__[name]
         except:
-            raise AttrError('{} does not exists'.format(name))
+            raise AttrError('{} does not exists [{}]'.format(
+                name,
+                self.__dict__.keys()))
+
+    def __getitem__(self, name):
+        return self.__dict__.get(name, None)
 
     def dumps(self):
-    	print json.dumps(self.__dict__, indent=3)
+        print json.dumps(self.__dict__, indent=3)
 
     def is_pass_filter(self, crit={}):
         """ crit = [ {'grade__gt': 'D',
@@ -52,8 +58,10 @@ class Note(BaseObject):
             "loanStatusDate":"2013-05-20T13:13:53.000-07:00"
     }
     """
+
     def __str__(self):
-    	return '<Note: {}>'.format(self.noteId)
+        return '<Note: {}>'.format(self.noteId)
+
 
 class DetailedNote(BaseObject):
 
@@ -87,8 +95,9 @@ class DetailedNote(BaseObject):
        "orderDate": "2015-03-20T00:00:00.000-07:00"
     }
     """
+
     def __str__(self):
-    	return '<DetailedNote: {}>'.format(self.noteId)
+        return '<DetailedNote: {}>'.format(self.noteId)
 
     def get_current_payment_number(self):
         """ return number of current payment
@@ -105,7 +114,6 @@ class DetailedNote(BaseObject):
         else:
             return payment_no
 
-
     def estimate_next_payment_amount(self):
         """ return estimate payment for this note
             calculate by:
@@ -120,7 +128,6 @@ class DetailedNote(BaseObject):
         elif not self.lastPaymentDate:
             return self.noteAmount * (100 + self.interestRate) / 100 / self.loanLength
         return round(self.paymentsReceived / payment_no, 2)
-
 
 
 class Loan(BaseObject):
@@ -215,5 +222,50 @@ class Loan(BaseObject):
             "totCollAmt":12
     }
     """
+
     def __str__(self):
-    	return '<Loan: {}>'.format(self.id)
+        return '<Loan: {}>'.format(self.id)
+
+
+class FolioLoan(BaseObject):
+
+    """
+    {
+        "loanId": "28102419",
+        "noteId": "58215920",
+        "orderId": "50738493",
+        "accruedInterest": 31.24,
+        "status": "Current",
+        "askPrice": 1989.93,
+        "markupDiscount": 7.70,
+        "ytm": 20.73,
+        "daysSinceLastPayment": 20,
+        "creditScoreTrend": "UP",
+        "ficoRange": "735-739",
+        "dateTimeListed": "2015-08-21",
+        "neverLate": "true",
+        "loanClass": "G1",
+        "loanMaturity": 60,
+        "originalNoteAmount": 2000.00,
+        "interestRate": 2.00,
+        "principalInterest": 
+    },
+    """
+
+    def __str__(self):
+        return '<FolioFn: {}/{}/{}>'.format(self.loanId,
+                                            self.orderId,
+                                            self.noteId)
+    @property
+    def daysSinceLastPayment(self):
+        return self.__dict__.get('daysSinceLastPayment', 0) 
+
+    def construct_url(self):
+        """
+        https://www.lendingclub.com/foliofn/browseNotesLoanPerf.action?showfoliofn=true&loan_id=1593342&order_id=3469444&note_id=14470297
+        """
+        base = "https://www.lendingclub.com/foliofn/browseNotesLoanPerf.action?showfoliofn=true&"
+        return "{}loan_id={}&order_id={}&note_id={}".format(base,
+                                                            self.loanId,
+                                                            self.orderId,
+                                                            self.noteId)

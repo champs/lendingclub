@@ -2,7 +2,7 @@
 
 import requests
 import json
-from objects import Note, DetailedNote, Loan
+from objects import Note, DetailedNote, Loan, FolioLoan
 requests.packages.urllib3.disable_warnings()
 
 
@@ -11,7 +11,7 @@ class RequstError(Exception):
 
 
 class API:
-
+    """ Lending Club API """
     def __init__(self, investor_id, token, version='v1'):
         self.api = 'https://api.lendingclub.com/api'
         self.investor_id = investor_id
@@ -106,3 +106,49 @@ class API:
         if not self._loans:
             self.loanlisting()
         return [Loan(l) for l in self._loans]
+
+
+class FolioFn:
+    """ FolioFnAPI 
+        http://www.foliofnapi.com/api.html
+        The FOLIOfn API project is a Moran Nachum project.
+
+    """
+    def __init__(self):
+        self.api = 'http://www.foliofnapi.com/get.php'
+        self._loans = None
+
+    def _getbody(self, content):
+        begin = '<body>'
+        end = '</body>'
+        idx1 = content.find(begin)
+        idx2 = content.find(end)
+        content = content[idx1+len(begin):idx2].strip()
+        content = content.replace('": <br/>}', '": null}')
+        content = content.replace('<br/>', '')
+        content = content.replace("}, ]", "}]")
+        return content
+
+    def get(self, params={}):
+        url = self.api
+        params.update({'format': 'JSON'})
+        headers = {'content-type': 'application/json'}
+        response = requests.get(url,
+                                headers=headers,
+                                params=params)
+        if response.status_code != 200:
+            msg = '{}: {}'.format(response.status_code,
+                                  response.content)
+            raise RequstError(msg)
+        content = self._getbody(response.content)
+        if content == 'No rows returned.':
+            return {'notes': []}
+        return json.loads(content)
+
+    def filter(self, params):
+        if not self._loans:
+            self._loans = self.get(params)['notes']
+        return [FolioLoan(l) for l in self._loans]
+
+    def sorted(self, loanlist):
+        return sorted(loanlist, key=lambda k: k['loanClass']) 
