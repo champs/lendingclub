@@ -114,9 +114,11 @@ class FolioFn:
         The FOLIOfn API project is a Moran Nachum project.
 
     """
-    def __init__(self):
+    def __init__(self, user=None, password=None):
         self.api = 'http://www.foliofnapi.com/get.php'
         self._loans = None
+        self.user = user
+        self.password = password
 
     def _getbody(self, content):
         begin = '<body>'
@@ -151,4 +153,4 @@ class FolioFn:
         return [FolioLoan(l) for l in self._loans]
 
     def sorted(self, loanlist):
-        return sorted(loanlist, key=lambda k: k['loanClass']) 
+        return sorted(loanlist, key=lambda k: k['loanClass'], reverse=True)

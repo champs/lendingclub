@@ -2,7 +2,8 @@
 
 import json
 import datetime
-from utils import get_time_now, parse_time
+from utils import get_time_now, parse_time, auth
+import requests
 
 
 class AttrError(Exception):
@@ -16,8 +17,12 @@ class BaseObject(object):
 
     def __getattr__(self, name):
         try:
-            return self.__dict__[name]
-        except:
+            val = self.__dict__[name]
+            if type(val) == float:
+                return round(val, 2)
+            else:
+                return val
+        except KeyError:
             raise AttrError('{} does not exists [{}]'.format(
                 name,
                 self.__dict__.keys()))
@@ -128,6 +133,32 @@ class DetailedNote(BaseObject):
         elif not self.lastPaymentDate:
             return self.noteAmount * (100 + self.interestRate) / 100 / self.loanLength
         return round(self.paymentsReceived / payment_no, 2)
+
+    def calculate_note_profit(self):
+        """ calculate note's profit in percent %
+        """
+        return round(float(self.paymentsReceived - self.principalReceived) / self.noteAmount * 100.0, 2)
+
+    def profitgain_sell(self, x=10):
+        """ We should sell note when borrower paid half of the principal
+            or profit reach x=10 percent
+        """
+        return (
+            self.loanStatus == 'Current' and
+            self.principalReceived > self.noteAmount / 2 or
+            self.calculate_note_profit() > x)
+
+    def cutloss_sell(self):
+        return (
+            self.loanStatus not in ['Issued', 'Current', 'Fully Paid'])
+
+    def days_since_last_pmt(self):
+        if not self.lastPaymentDate:
+            return None
+        return (get_time_now() - parse_time(self.lastPaymentDate)).days
+    
+    def url_params(self):
+        return 'loan_id={}&order_id={}&note_id={}'.format(self.loanId, self.orderId, self.noteId)
 
 
 class Loan(BaseObject):
@@ -256,9 +287,10 @@ class FolioLoan(BaseObject):
         return '<FolioFn: {}/{}/{}>'.format(self.loanId,
                                             self.orderId,
                                             self.noteId)
+
     @property
     def daysSinceLastPayment(self):
-        return self.__dict__.get('daysSinceLastPayment', 0) 
+        return self.__dict__.get('daysSinceLastPayment', 0)
 
     def construct_url(self):
         """
@@ -269,3 +301,8 @@ class FolioLoan(BaseObject):
                                                             self.loanId,
                                                             self.orderId,
                                                             self.noteId)
+
+    def get_loanlisting(self, email, password):
+        login_url = 'https://www.lendingclub.com/account/login.action'
+        opener = auth(login_url, email, password)
+        print opener.get(self.consolidation())

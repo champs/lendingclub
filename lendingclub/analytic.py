@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from collections import OrderedDict
+from utils import get_time_now, parse_time, auth
 
 
 class Filter:
@@ -65,13 +66,65 @@ class NotesAnalytic(BaseAnalytic):
             if note.loanStatus in ("Issued", "Current"):
                 nxt_pmt_date = note.nextPaymentDate
                 nxt_pmt_amt = note.estimate_next_payment_amount()
-                result[nxt_pmt_date] = result.get(
-                    nxt_pmt_date, 0) + nxt_pmt_amt
+                if nxt_pmt_date:
+                    result[nxt_pmt_date] = result.get(
+                        nxt_pmt_date, 0) + nxt_pmt_amt
         ordered = OrderedDict(sorted(result.items(), key=lambda t: t[0]))
         return ordered
 
+    def report_note_stats(self):
+        """ return
+            - loanstatus: count by loanstatus
+            - paymentstatus: count by payment status
+            - lastpayment date: date since last payment
+
+        """
+        loanstatus = {}
+        paymentstatus = {}
+        lastpaymentdate = {}
+        for note in self.notes:
+            loanstatus[note.loanStatus] = loanstatus.get(
+                note.loanStatus, 0) + 1
+            paymentstatus[note.currentPaymentStatus] = paymentstatus.get(
+                note.currentPaymentStatus, 0) + 1
+            if note.lastPaymentDate and note.loanStatus in ['Issued', 'Current']:
+                day_since_last_pmt = note.days_since_last_pmt()
+                if day_since_last_pmt >= 29:
+                    if day_since_last_pmt in lastpaymentdate:
+                        lastpaymentdate[day_since_last_pmt].append(
+                            note.url_params())
+                    else:
+                        lastpaymentdate[day_since_last_pmt] = [
+                            note.url_params()]
+        return {'loanstatus': loanstatus,
+                'paymentstatus': paymentstatus,
+                'lastpaymentdate': lastpaymentdate}
+
+    def sell_list(self, x=10):
+        """ Sell note if it reach (X) %
+        """
+        row_table = "{:<55} |" +"{:<10}" * 6
+        for note in self.notes:
+            if note.profitgain_sell():
+                print row_table.format(note.url_params(),
+                                       'profit',
+                                       note.principalReceived,
+                                       note.noteAmount,
+                                       note.calculate_note_profit(),
+                                       note.loanStatus,
+                                       ''
+                                       )
+            if note.cutloss_sell():
+                print row_table.format(note.url_params(),
+                                        'cutloss',
+                                        note.principalReceived,
+                                        note.noteAmount,
+                                        note.calculate_note_profit(),
+                                        note.loanStatus,
+                                        ' ({} days)'.format(note.days_since_last_pmt())
+                                        )
 
 class LoansAnalytic(BaseAnalytic):
 
     def __init__(self, loans):
-        pass
+        self.loans = loans
