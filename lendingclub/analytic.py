@@ -107,7 +107,6 @@ class NotesAnalytic(BaseAnalytic):
             if note.lastPaymentDate and note.loanStatus in ['Issued', 'Current']:
                 day_since_last_pmt = note.days_since_last_pmt()
                 if day_since_last_pmt >= 33: #
-                    print note.__dict__
                     if day_since_last_pmt in lastpaymentdate:
                         lastpaymentdate[day_since_last_pmt].append(
                             note.url_params())
