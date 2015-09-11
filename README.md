@@ -7,7 +7,8 @@ pip install requests
 ## Install:
 python setup.py install
 
-## Usage:
+## Usage 
+- view Summary: 
 ```
 from lendingclub import LendingClub
 lc = LendingClub(investor_id=999999999, token='<auth_token>')
@@ -16,6 +17,18 @@ print lc.summary()
 u'outstandingPrincipal': 4831.93, u'investorId': 999999, u'receivedPrincipal': 518.07, u'accruedInterest': 24.79,
 u'availableCash': 50.42, u'totalPortfolios': 3, u'totalNotes': 170}
 
+```
+- view current Note status:
+```
+notes = lc.get_detailednotes()
+payments = lendingclub.NotesAnalytic(notes).estimate_daily_payments()
+print '- income', '-' * 40
+print json.dumps(payments, indent=3)
+print '- stats', '-' * 40
+result = lendingclub.NotesAnalytic(notes).report_note_stats()
+print json.dumps(result, indent=3)
+print '- sell list', '-' * 40
+lendingclub.NotesAnalytic(notes).sell_list(x=10)
 ```
 > auth_token is an authentication token generated via the Lending Club web application.
 
