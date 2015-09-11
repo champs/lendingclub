@@ -2,7 +2,7 @@
 API for lendingclub
 
 ## required:
-pip install requests
+pip install -r requirement.pip
 
 ## Install:
 python setup.py install
