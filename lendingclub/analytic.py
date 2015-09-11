@@ -72,11 +72,28 @@ class NotesAnalytic(BaseAnalytic):
         ordered = OrderedDict(sorted(result.items(), key=lambda t: t[0]))
         return ordered
 
+    def report_note_maturity(self):
+        """ return
+            {get_current_payment_number(): count}
+        """
+        result = {}
+        for note in self.notes:
+            cur_months = note.get_current_payment_number()
+            cur_term = '{0:02d}/{1:02d}'.format(cur_months, note.loanLength)
+            result[cur_term] = result.get(cur_term, 0) + 1
+
+        ordered = OrderedDict(sorted(
+            result.items(),
+            key=lambda t: ''.join(t[0].split('/')[::-1])))
+
+        return ordered
+
     def report_note_stats(self):
         """ return
             - loanstatus: count by loanstatus
             - paymentstatus: count by payment status
             - lastpayment date: date since last payment
+                - 33 = 30 days + 3 processing date
 
         """
         loanstatus = {}
@@ -89,7 +106,8 @@ class NotesAnalytic(BaseAnalytic):
                 note.currentPaymentStatus, 0) + 1
             if note.lastPaymentDate and note.loanStatus in ['Issued', 'Current']:
                 day_since_last_pmt = note.days_since_last_pmt()
-                if day_since_last_pmt >= 29:
+                if day_since_last_pmt >= 33: #
+                    print note.__dict__
                     if day_since_last_pmt in lastpaymentdate:
                         lastpaymentdate[day_since_last_pmt].append(
                             note.url_params())
@@ -103,7 +121,7 @@ class NotesAnalytic(BaseAnalytic):
     def sell_list(self, x=10):
         """ Sell note if it reach (X) %
         """
-        row_table = "{:<55} |" +"{:<10}" * 6
+        row_table = "{:<55} |" + "{:<10}" * 6
         for note in self.notes:
             if note.profitgain_sell():
                 print row_table.format(note.url_params(),
@@ -116,13 +134,15 @@ class NotesAnalytic(BaseAnalytic):
                                        )
             if note.cutloss_sell():
                 print row_table.format(note.url_params(),
-                                        'cutloss',
-                                        note.principalReceived,
-                                        note.noteAmount,
-                                        note.calculate_note_profit(),
-                                        note.loanStatus,
-                                        ' ({} days)'.format(note.days_since_last_pmt())
-                                        )
+                                       'cutloss',
+                                       note.principalReceived,
+                                       note.noteAmount,
+                                       note.calculate_note_profit(),
+                                       note.loanStatus,
+                                       ' ({} days)'.format(
+                    note.days_since_last_pmt())
+                )
+
 
 class LoansAnalytic(BaseAnalytic):
 
