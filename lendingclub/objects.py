@@ -11,6 +11,8 @@ class AttrError(Exception):
 
 
 class BaseObject(object):
+    """ Object Base Class
+    """
 
     def __init__(self, dict_obj):
         self.__dict__ = dict_obj
@@ -45,8 +47,8 @@ class Summary(BaseObject):
 
 
 class Note(BaseObject):
-
-    """
+    """ 
+    Note Object (meta data of each note)
     {
             "loanId":11111,
             "noteId":22222,
@@ -70,7 +72,7 @@ class Note(BaseObject):
 
 class DetailedNote(BaseObject):
 
-    """
+    """ Detail Note Object provide all note attributes
     {
        "grade": "C1", 
        "loanId": 55555555, 
@@ -156,7 +158,7 @@ class DetailedNote(BaseObject):
         if not self.lastPaymentDate:
             return None
         return (get_time_now() - parse_time(self.lastPaymentDate)).days
-    
+
     def url_params(self):
         return 'loan_id={}&order_id={}&note_id={}'.format(self.loanId, self.orderId, self.noteId)
 
